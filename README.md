@@ -1,1 +1,10 @@
 # zeebe-snippets
+
+This is your place for code snippets that rely on Zeebe.
+
+Please include a README that explains:
+- What is your snippet about?
+- How is it developed and built?
+- Important additional information
+
+If a snippet is still relevant in the future, please ensure that it gets upgraded.
