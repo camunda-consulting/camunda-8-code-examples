@@ -10,3 +10,5 @@ Please include a README that explains:
 - Important additional information
 
 If a snippet is still relevant in the future, please ensure that it gets upgraded.
+
+Also, please make sure you do not commit useless stuff like build artifatcs. To ignore them, please append rules to the `.gitignore` in root.
