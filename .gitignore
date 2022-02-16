@@ -226,3 +226,4 @@ fabric.properties
 # Ignore all local history of files
 .history
 .ionide
+*/application-dev.yaml

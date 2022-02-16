@@ -1,0 +1,14 @@
+server:
+  servlet:
+    context-path: /api
+logging:
+  level:
+    root: info
+    org:
+      apache:
+        http: info
+    httpclient:
+      wire: info
+spring:
+  profiles:
+    active: dev
