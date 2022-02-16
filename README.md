@@ -2,6 +2,8 @@
 
 This is your place for code snippets that rely on Zeebe.
 
+Please make sure you have a meaningful name for your folder that gives a first idea what your snippet is about.
+
 Please include a README that explains:
 - What is your snippet about?
 - How is it developed and built?
