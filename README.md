@@ -11,4 +11,19 @@ Please include a README that explains:
 
 If a snippet is still relevant in the future, please ensure that it gets upgraded.
 
-Also, please make sure you do not commit useless stuff like build artifatcs. To ignore them, please append rules to the `.gitignore` in root.
+Also, please make sure you do not commit useless/private stuff like:
+- build artifacts
+- cluster credentials
+- IDE-specific files
+
+Tip: When using Spring-Boot, put this in your `application.yaml`:
+
+````yaml
+spring:
+  profiles:
+    active: dev
+````
+Then, you can create another file next to it called `application-dev.yaml` that contains your private properties. This file will be ignored automatically.
+
+
+To ignore them, please append rules to the `.gitignore` in root.
