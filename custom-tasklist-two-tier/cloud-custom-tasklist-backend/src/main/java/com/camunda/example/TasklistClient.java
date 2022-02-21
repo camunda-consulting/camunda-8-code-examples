@@ -1,7 +1,7 @@
 package com.camunda.example;
 
-import com.camunda.example.model.graphql.*;
-import com.camunda.example.model.graphql.response.*;
+import com.camunda.example.model.graphql.GraphQLRequestDto;
+import com.camunda.example.model.graphql.GraphQLResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.zeebe.client.impl.ZeebeClientCredentials;
 import io.camunda.zeebe.spring.client.properties.ZeebeClientConfigurationProperties;
@@ -15,11 +15,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static com.camunda.example.GraphQLBuilder.*;
 
 @Component
 @Slf4j
@@ -72,70 +69,8 @@ public class TasklistClient {
     this.credentials = response.getBody();
   }
 
-  public List<TaskDto> getTasks(TaskQueryDto taskQuery) {
-    GraphQLRequestDto requestDto = new GraphQLRequestDto();
-    requestDto.setQuery(query("getTasks")
-        .queryDefinitionName("tasks")
-        .variableInput(input().variable("query", "TaskQuery!"))
-        .queryVariables(queryVars().inputVariable("query", "query"))
-        .queryDefinition(TaskDto.queryDef())
-        .build());
-    requestDto.setVariables(Map.of("query", taskQuery));
-    return executeQuery(requestDto, new ParameterizedTypeReference<GraphQLResponseDto<TasksResponseDto>>() {})
-        .getData()
-        .getTasks();
-  }
-
-  public TaskDto getTask(String taskId) {
-    GraphQLRequestDto requestDto = new GraphQLRequestDto();
-    requestDto.setQuery(query("getTask")
-        .queryDefinitionName("task")
-        .variableInput(input().variable("taskId", "String!"))
-        .queryVariables(queryVars().inputVariable("id", "taskId"))
-        .queryDefinition(TaskDto.queryDef())
-        .build());
-    requestDto.setVariables(Map.of("taskId", taskId));
-    return executeQuery(requestDto, new ParameterizedTypeReference<GraphQLResponseDto<TaskResponseDto>>() {})
-        .getData()
-        .getTask();
-  }
-
-  public TaskDto completeTask(String taskId, List<VariableInputDto> variables) {
-    GraphQLRequestDto requestDto = new GraphQLRequestDto();
-    requestDto.setQuery(mutation("completeTask")
-        .queryDefinitionName("completeTask")
-        .variableInput(input()
-            .variable("taskId", "String!")
-            .variable("variables", "[VariableInput!]!"))
-        .queryVariables(queryVars()
-            .inputVariable("taskId", "taskId")
-            .inputVariable("variables", "variables"))
-        .queryDefinition(TaskDto.queryDef())
-        .build());
-    requestDto.setVariables(Map.of("taskId", taskId, "variables", variables));
-    return executeQuery(requestDto, new ParameterizedTypeReference<GraphQLResponseDto<CompleteTaskResponseDto>>() {})
-        .getData()
-        .getCompleteTask();
-
-  }
-
-  public UserDto getCurrentUser() {
-    GraphQLRequestDto requestDto = new GraphQLRequestDto();
-    requestDto.setQuery(query("getCurrentUser")
-        .queryDefinitionName("currentUser")
-        .queryDefinition(queryDef()
-            .scalarField("username")
-            .scalarField("firstname")
-            .scalarField("lastname")
-            .scalarField("permissions"))
-        .build());
-    return executeQuery(requestDto, new ParameterizedTypeReference<GraphQLResponseDto<UserResponseDto>>() {})
-        .getData()
-        .getCurrentUser();
-  }
-
   private <T extends GraphQLResponseDto<?>> T executeQuery(
-      GraphQLRequestDto requestDto, ParameterizedTypeReference<T> typeReference
+      GraphQLRequestDto requestDto, ParameterizedTypeReference<T> typeReference, Optional<String> bearerToken
   ) {
     try {
       log.info("Requesting from tasklist: \n{}",
@@ -148,7 +83,8 @@ public class TasklistClient {
     }
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
-    headers.setBearerAuth(getAccessToken());
+    bearerToken.ifPresentOrElse((token) -> headers.setBearerAuth(token.replace("Bearer ", "")),
+        () -> headers.setBearerAuth(getAccessToken()));
     HttpEntity<GraphQLRequestDto> graphQLRequestEntity = new HttpEntity<>(requestDto, headers);
     ResponseEntity<T> entity = restTemplate.exchange(URI.create(graphQLEndpoint),
         HttpMethod.POST,
@@ -156,8 +92,7 @@ public class TasklistClient {
         typeReference
     );
     try {
-      log.info(
-          "Response from tasklist: \n{}",
+      log.info("Response from tasklist: \n{}",
           objectMapper
               .writerWithDefaultPrettyPrinter()
               .writeValueAsString(entity.getBody())
@@ -169,38 +104,7 @@ public class TasklistClient {
   }
 
   public GraphQLResponseDto<?> executeQuery(GraphQLRequestDto dto, Optional<String> bearerToken) {
-    return executeQuery(dto, new ParameterizedTypeReference<>() {});
+    return executeQuery(dto, new ParameterizedTypeReference<>() {}, bearerToken);
   }
 
-  public TaskDto claimTask(String taskId, String userId) {
-    GraphQLRequestDto requestDto = new GraphQLRequestDto();
-    requestDto.setQuery(mutation("claimTask")
-        .variableInput(input()
-            .variable("taskId", "String!")
-            .variable("userId", "String"))
-        .queryDefinitionName("claimTask")
-        .queryVariables(queryVars()
-            .inputVariable("taskId", "taskId")
-            .inputVariable("assignee", "userId"))
-        .queryDefinition(TaskDto.queryDef())
-        .build());
-    requestDto.setVariables(Map.of("userId", userId, "taskId", taskId));
-    return executeQuery(requestDto, new ParameterizedTypeReference<GraphQLResponseDto<ClaimTaskResponseDto>>() {})
-        .getData()
-        .getClaimTask();
-  }
-
-  public TaskDto unclaimTask(String taskId) {
-    GraphQLRequestDto requestDto = new GraphQLRequestDto();
-    requestDto.setQuery(mutation("unclaimTask")
-        .variableInput(input().variable("taskId", "String!"))
-        .queryDefinitionName("unclaimTask")
-        .queryVariables(queryVars().inputVariable("taskId", "taskId"))
-        .queryDefinition(TaskDto.queryDef())
-        .build());
-    requestDto.setVariables(Map.of("taskId", taskId));
-    return executeQuery(requestDto, new ParameterizedTypeReference<GraphQLResponseDto<UnclaimTaskResponseDto>>() {})
-        .getData()
-        .getUnclaimTask();
-  }
 }
