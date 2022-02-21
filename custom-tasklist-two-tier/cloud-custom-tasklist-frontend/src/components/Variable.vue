@@ -1,25 +1,26 @@
 <script lang="ts" setup>
-const variable = defineProps(["variableName", "variableValue", "taskId"]);
-defineEmits(['variableValueChange']);
+const variable = defineProps(["variable"]);
 
-const jsonValue = JSON.stringify(variable.variableValue,undefined,2);
 </script>
 
 <template>
-  <td>
+  <td class="variable-name">
     <h4>{{ variable.variableName }}</h4>
   </td>
-  <td>
+  <td class="variable-value">
     <textarea
       type="text"
-      v-model="jsonValue"
-      @change="
-        $emit('variableValueChange', {
-          taskId: variable.taskId,
-          variableName: variable.variableName,
-          variableValue: JSON.parse(jsonValue),
-        })
-      "
+      v-model="variable.value"
     />
   </td>
 </template>
+<style>
+.variable-name {
+  max-width: 100px;
+}
+
+textarea {
+  width: 95%;
+  height: 100%;
+}
+</style>

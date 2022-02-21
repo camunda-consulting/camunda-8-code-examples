@@ -1,67 +1,117 @@
 <script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount, type Ref } from "vue";
-import Variable from "./components/Variable.vue";
+import Tasklist from "./components/Tasklist.vue";
+import Task from "./components/Task.vue";
+import { ref } from "vue";
+import { useQuery,  useResult, useMutation } from '@vue/apollo-composable'
+import gql from 'graphql-tag'
 
-const tasklist: Ref<any[]> = ref([]);
-let interval: number;
+const selectedTask = ref();
 
-const fetchData = async () => {
-  fetch("/api/task").then((response) => {
-    response.json().then((body) => {
-      tasklist.value = body;
-      console.log(tasklist.value);
-    });
-  });
-};
-
-const completeTask = async (taskId: string, variables: any) => {
-  fetch(`/api/task/${taskId}/complete`, {
-    method: "POST",
-    body: JSON.stringify(variables),
-    headers: { "Content-Type": "application/json" },
-  }).then(() => fetchData());
-};
-
-const handleChange = async (changeEvent:any) => {
-  console.log(changeEvent);
-  const oldValue = tasklist.value.find((task) => task.id == changeEvent.taskId).variables[changeEvent.variableName];
-  console.log(`Old value: ${oldValue}`);
-  tasklist.value.find((task) => task.id == changeEvent.taskId).variables[changeEvent.variableName] = changeEvent.variableValue;
-  const newValue = tasklist.value.find((task) => task.id == changeEvent.taskId).variables[changeEvent.variableName];
-  console.log(`New value: ${newValue}`);
-}
-
-onMounted(() => {
-  fetchData();
-  interval = setInterval(fetchData, 10000);
+const tasksQuery = useQuery(gql`
+  query ($query: TaskQuery!){
+    tasks(query: $query) {
+      id
+      name
+      taskDefinitionId
+      processName
+      creationTime
+      completionTime
+      assignee
+      taskState
+      sortValues
+      isFirst
+      formKey
+      processDefinitionId
+      candidateGroups
+      __typename
+    }
+  }
+`,
+{
+  query:{
+    state: "CREATED"
+  }
+},
+{
+  pollInterval: 10000
 });
+const tasklist = useResult(tasksQuery.result);
 
-onBeforeUnmount(() => clearInterval(interval));
+const completeTaskMutation = useMutation(gql`
+  mutation($taskId: String!, $variables: [VariableInput!]!) {
+    completeTask(taskId: $taskId, variables: $variables) {
+      id
+      name
+      taskDefinitionId
+      processName
+      creationTime
+      completionTime
+      assignee
+      variables {
+        id
+        name
+        value
+        previewValue
+        isValueTruncated
+        __typename
+      }
+      taskState
+      sortValues
+      isFirst
+      formKey
+      processDefinitionId
+      candidateGroups
+      __typename
+    }
+  }
+`);
+
+completeTaskMutation.onDone(() => {
+  selectedTask.value = undefined;
+  tasksQuery.refetch()});
+
+const completeTask = completeTaskMutation.mutate;
 </script>
 
 <template>
   <div class="header">
     <h1>Tasklist</h1>
   </div>
-  <div class="content">
-    <div v-for="task in tasklist">
-      {{ task }}
-      <h3>{{ task.taskName }}</h3>
-      <table>
-        <tr v-for="(variableValue, variableName) in task.variables">
-          <Variable
-            :variableName="variableName"
-            :variableValue="variableValue"
-            :taskId="task.id"
-            @variable-value-change="handleChange"
-          ></Variable>
-        </tr>
-      </table>
-      <button @click="completeTask(task.id, task.variables)">Complete</button>
+  <div class="tasklist">
+    <div class="list"><Tasklist @selectedTask="(task) => selectedTask = task" :tasklist="tasklist"></Tasklist></div>
+    <div class="content">
+      <Task v-if="selectedTask" :taskId="selectedTask!.id" @completeTask="completeTask"></Task>
     </div>
   </div>
 </template>
 
 <style>
-@import "https://unpkg.com/todomvc-app-css@2.4.1/index.css";
+html,
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+}
+
+#app {
+  height: 100%;
+}
+div {
+  border-color: black;
+  border-width: 0.1em;
+  border-style: solid;
+}
+.tasklist {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 5fr;
+  border-style: solid;
+  height: 100%;
+}
+.list {
+  min-width: 300px;
+}
+
+.content {
+  width: 100%;
+}
 </style>

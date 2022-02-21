@@ -2,7 +2,6 @@ package com.camunda.example;
 
 import com.camunda.example.model.graphql.*;
 import com.camunda.example.model.graphql.response.*;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.zeebe.client.impl.ZeebeClientCredentials;
 import io.camunda.zeebe.spring.client.properties.ZeebeClientConfigurationProperties;
@@ -18,6 +17,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.camunda.example.GraphQLBuilder.*;
 
@@ -156,13 +156,20 @@ public class TasklistClient {
         typeReference
     );
     try {
-    log.info("Response from tasklist: \n{}", objectMapper
-        .writerWithDefaultPrettyPrinter()
-        .writeValueAsString(entity.getBody()));
+      log.info(
+          "Response from tasklist: \n{}",
+          objectMapper
+              .writerWithDefaultPrettyPrinter()
+              .writeValueAsString(entity.getBody())
+      );
     } catch (Exception e) {
       log.info("with Variables: \n{}", entity.getBody());
     }
     return entity.getBody();
+  }
+
+  public GraphQLResponseDto<?> executeQuery(GraphQLRequestDto dto, Optional<String> bearerToken) {
+    return executeQuery(dto, new ParameterizedTypeReference<>() {});
   }
 
   public TaskDto claimTask(String taskId, String userId) {
