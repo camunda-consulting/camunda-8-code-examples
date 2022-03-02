@@ -1,4 +1,5 @@
 # Custom Tasklist Two Tier
+built with 1.3.4
 
 ## Topic
 Creation of a custom tasklist using the capabilities of the GraphQL API the Tasklist component offers.
