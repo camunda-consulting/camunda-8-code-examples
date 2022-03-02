@@ -17,6 +17,8 @@ Also, please make sure you do not commit useless/private stuff like:
 - cluster credentials
 - IDE-specific files
 
+To ignore them, please append rules to the `.gitignore` in root.
+
 Tip: When using Spring-Boot, put this in your `application.yaml`:
 
 ````yaml
@@ -25,6 +27,3 @@ spring:
     active: dev
 ````
 Then, you can create another file next to it called `application-dev.yaml` that contains your private properties. This file will be ignored automatically.
-
-
-To ignore them, please append rules to the `.gitignore` in root.
