@@ -1,110 +1,98 @@
 package com.camunda.example;
 
-import com.camunda.example.model.graphql.GraphQLRequestDto;
-import com.camunda.example.model.graphql.GraphQLResponseDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.zeebe.client.impl.ZeebeClientCredentials;
-import io.camunda.zeebe.spring.client.properties.ZeebeClientConfigurationProperties;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
+import com.camunda.example.model.graphql.*;
+import com.fasterxml.jackson.databind.*;
+import io.camunda.zeebe.client.*;
+import io.grpc.*;
+import lombok.extern.slf4j.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.core.*;
 import org.springframework.http.*;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.*;
+import org.springframework.stereotype.*;
+import org.springframework.web.client.*;
 
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
 @Component
 @Slf4j
 public class TasklistClient {
   private final RestTemplate restTemplate;
-  private final ZeebeClientConfigurationProperties properties;
-  private final String graphQLEndpoint;
+  private final URI graphQLEndpoint;
   private final ObjectMapper objectMapper;
-  private ZeebeClientCredentials credentials;
+  private final CredentialsProvider credentialsProvider;
 
   @Autowired
   public TasklistClient(
-      ZeebeClientConfigurationProperties properties, ObjectMapper objectMapper
+      ObjectMapper objectMapper,
+      @Qualifier("graphql-url") URI graphQLEndpoint,
+      @Qualifier("graphql-credentials-provider") CredentialsProvider credentialsProvider
   ) {
     this.objectMapper = objectMapper;
     this.restTemplate = new RestTemplate();
     restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
-    this.properties = properties;
-    this.graphQLEndpoint = "https://" + properties
-        .getCloud()
-        .getRegion() + ".tasklist.camunda.io:443/" + properties
-        .getCloud()
-        .getClusterId() + "/graphql";
-  }
-
-  private String getAccessToken() {
-    if (credentials == null || !credentials.isValid()) {
-      createCredentials();
-    }
-    return credentials.getAccessToken();
-  }
-
-  private void createCredentials() {
-    Map<String, String> body = new HashMap<>();
-    body.put("client_id",
-        properties
-            .getCloud()
-            .getClientId()
-    );
-    body.put("client_secret",
-        properties
-            .getCloud()
-            .getClientSecret()
-    );
-    body.put("audience", "tasklist.camunda.io");
-    body.put("grant_type", "client_credentials");
-    ResponseEntity<ZeebeClientCredentials> response = restTemplate.postForEntity(properties
-        .getCloud()
-        .getAuthUrl(), body, ZeebeClientCredentials.class);
-    this.credentials = response.getBody();
+    this.graphQLEndpoint = graphQLEndpoint;
+    this.credentialsProvider = credentialsProvider;
   }
 
   private <T extends GraphQLResponseDto<?>> T executeQuery(
       GraphQLRequestDto requestDto, ParameterizedTypeReference<T> typeReference, Optional<String> bearerToken
   ) {
-    try {
-      log.info("Requesting from tasklist: \n{}",
-          objectMapper
-              .writerWithDefaultPrettyPrinter()
-              .writeValueAsString(requestDto)
-      );
-    } catch (Exception e) {
-      log.info("Requesting from tasklist: \n{}", requestDto);
-    }
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    bearerToken.ifPresentOrElse((token) -> headers.setBearerAuth(token.replace("Bearer ", "")),
-        () -> headers.setBearerAuth(getAccessToken()));
+    logAsJson("Requesting from tasklist: \n{}", requestDto);
+
+    HttpHeaders headers = createHeaders(bearerToken);
+
     HttpEntity<GraphQLRequestDto> graphQLRequestEntity = new HttpEntity<>(requestDto, headers);
-    ResponseEntity<T> entity = restTemplate.exchange(URI.create(graphQLEndpoint),
+    ResponseEntity<T> entity = restTemplate.exchange(graphQLEndpoint,
         HttpMethod.POST,
         graphQLRequestEntity,
         typeReference
     );
-    try {
-      log.info("Response from tasklist: \n{}",
-          objectMapper
-              .writerWithDefaultPrettyPrinter()
-              .writeValueAsString(entity.getBody())
-      );
-    } catch (Exception e) {
-      log.info("with Variables: \n{}", entity.getBody());
-    }
-    return entity.getBody();
+    T body = entity.getBody();
+    logAsJson("Response from tasklist: \n{}", body);
+    return body;
   }
 
-  public GraphQLResponseDto<?> executeQuery(GraphQLRequestDto dto, Optional<String> bearerToken) {
+  public GraphQLResponseDto<JsonNode> executeQuery(GraphQLRequestDto dto, Optional<String> bearerToken) {
     return executeQuery(dto, new ParameterizedTypeReference<>() {}, bearerToken);
+  }
+
+  private void logAsJson(String message, Object object) {
+    try {
+      log.info(message,
+          objectMapper
+              .writerWithDefaultPrettyPrinter()
+              .writeValueAsString(object)
+      );
+    } catch (Exception e) {
+      log.info(message, object);
+    }
+  }
+
+  private HttpHeaders createHeaders(Optional<String> bearerToken) {
+    Metadata metadata = new Metadata();
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    bearerToken.ifPresentOrElse((token) -> headers.setBearerAuth(token.replace("Bearer ", "")), () -> {
+      try {
+        credentialsProvider.applyCredentials(metadata);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    });
+    metadata
+        .keys()
+        .forEach(key -> {
+          metadata
+              .getAll(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER))
+              .forEach(value -> {
+                log.info("Reading metadata: {} = {}", key, value);
+                headers.add(key, value);
+              });
+        });
+    return headers;
   }
 
 }

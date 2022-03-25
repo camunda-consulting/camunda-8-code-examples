@@ -2,6 +2,7 @@ package com.camunda.example;
 
 import com.camunda.example.model.graphql.GraphQLRequestDto;
 import com.camunda.example.model.graphql.GraphQLResponseDto;
+import com.fasterxml.jackson.databind.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ public class GraphQLController {
   public GraphQLController(TasklistClient tasklistClient) {this.tasklistClient = tasklistClient;}
 
   @PostMapping
-  public GraphQLResponseDto<?> graphql(
+  public GraphQLResponseDto<JsonNode> graphql(
       @RequestBody GraphQLRequestDto requestDto,
       @RequestHeader(value = "Authorization", required = false) Optional<String> bearerToken
   ) {

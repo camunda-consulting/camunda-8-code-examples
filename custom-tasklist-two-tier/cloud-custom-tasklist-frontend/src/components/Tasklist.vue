@@ -13,10 +13,13 @@ defineEmits(['selectedTask']);
   </div>
 </template>
 
-<style>
-button {
-  all: unset;
-  cursor: pointer;
+<style scoped>
+button{
   width: 100%;
+  box-sizing: border-box;
+}
+
+.element {
+  padding: 10px;
 }
 </style>
