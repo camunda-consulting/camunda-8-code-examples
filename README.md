@@ -1,6 +1,6 @@
-# zeebe-snippets
+# camunda-8-code-examples
 
-This is your place for code snippets that rely on Zeebe.
+This is your place for code snippets that rely on Camunda Platform 8 and Zeebe.
 
 Please make sure you have a meaningful name for your folder that gives a first idea what your snippet is about.
 
