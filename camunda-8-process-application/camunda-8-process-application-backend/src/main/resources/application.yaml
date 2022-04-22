@@ -1,0 +1,29 @@
+logging:
+  level:
+    root: info
+    org:
+      apache:
+        http: info
+      springframework:
+        security: debug
+    httpclient:
+      wire: info
+spring:
+  config:
+    import: application-dev.yaml
+  datasource:
+    url: jdbc:h2:/usr/local/opt/h2dbs/insurance-application
+  jpa:
+    hibernate:
+      ddl-auto: update
+  security:
+    user:
+      name: demo
+      password: demo
+      roles: clerk
+resilience4j:
+  retry:
+    instances:
+      operate:
+        max-attempts: 60
+        wait-duration: 1s
