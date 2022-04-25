@@ -34,8 +34,7 @@ public class InsuranceApplicationService {
     InsuranceApplicationEntity entity = initEntity(dto);
     InsuranceApplicationVariables variables = initVariables(dto, entity);
     ProcessInstanceEvent event = startApplicationProcess(variables);
-    InsuranceApplicationIdDto response = createIdResponse(saveEntity(entity, event));
-    return response;
+    return createIdResponse(saveEntity(entity, event));
   }
 
   public Page<InsuranceApplicationDto> page(Pageable pageable) {
@@ -50,14 +49,6 @@ public class InsuranceApplicationService {
 
   public Optional<InsuranceApplicationEntity> getEntity(String id) {
     return insuranceApplicationRepository.findById(id);
-  }
-
-  public Optional<String> xml(String id) {
-    return insuranceApplicationRepository
-        .findById(id)
-        .map(entity -> operateClient
-            .getProcessDefinitionsEndpoint()
-            .xml(entity.getProcessDefinitionKey()));
   }
 
   public Optional<InsuranceApplicationDto> delete(String id) {

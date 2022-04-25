@@ -21,7 +21,6 @@ import java.util.*;
 public class TasklistClient extends AbstractCredentialsRequiringClient {
   private final RestTemplate tasklistRestTemplate;
   private final URI tasklistUrl;
-  private final ObjectMapper objectMapper;
 
   @Autowired
   public TasklistClient(
@@ -31,7 +30,6 @@ public class TasklistClient extends AbstractCredentialsRequiringClient {
       @Qualifier("tasklist-credentials-provider") CredentialsProvider credentialsProvider
   ) {
     super(credentialsProvider, objectMapper);
-    this.objectMapper = objectMapper;
     this.tasklistRestTemplate = tasklistRestTemplate;
     this.tasklistUrl = tasklistUrl;
   }
@@ -54,7 +52,7 @@ public class TasklistClient extends AbstractCredentialsRequiringClient {
     return body;
   }
 
-  public GraphQLResponseDto<ObjectNode> executeQuery(GraphQLRequestDto dto) throws IOException {
+  public GraphQLResponseDto<ObjectNode> executeQuery(GraphQLRequestDto dto) {
     return executeQuery(dto, new ParameterizedTypeReference<>() {});
   }
 

@@ -1,0 +1,14 @@
+schema {
+    query: Query
+}
+
+type Query {
+    bpmnXml(processDefinitionId: ID!): BpmnXml
+}
+"""
+BpmnXml is a wrapper that contains the BPMN XML as data field
+"""
+type BpmnXml {
+    id: ID!
+    data: String!
+}

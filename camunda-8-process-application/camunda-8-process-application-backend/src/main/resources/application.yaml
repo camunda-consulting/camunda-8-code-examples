@@ -3,11 +3,17 @@ logging:
     root: info
     org:
       apache:
-        http: info
+        http: debug
       springframework:
         security: debug
     httpclient:
-      wire: info
+      wire: debug
+    com:
+      camunda:
+        example:
+          client:
+            tasklist: debug
+    graphql: debug
 spring:
   config:
     import: application-dev.yaml

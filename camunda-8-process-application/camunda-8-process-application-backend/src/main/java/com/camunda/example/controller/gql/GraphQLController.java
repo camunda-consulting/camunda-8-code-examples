@@ -3,6 +3,7 @@ package com.camunda.example.controller.gql;
 import com.camunda.example.client.tasklist.model.*;
 import com.camunda.example.service.gql.*;
 import com.fasterxml.jackson.databind.node.*;
+import graphql.*;
 import lombok.*;
 import org.springframework.web.bind.annotation.*;
 

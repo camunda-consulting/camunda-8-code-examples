@@ -28,11 +28,6 @@ public class RestApiController {
         .page(pageable);
   }
 
-  @GetMapping("insurance-application/id/{id}/xml")
-  public ResponseEntity<String> getXml(@PathVariable("id") String id) {
-    return ResponseEntity.of(insuranceApplicationService.xml(id));
-  }
-
   @DeleteMapping("insurance-application/id/{id}")
   public ResponseEntity<InsuranceApplicationDto> delete(@PathVariable("id") String id) {
     return ResponseEntity.of(insuranceApplicationService.delete(id));
