@@ -37,28 +37,25 @@ public class GraphQLService {
         .peek(operationDefinition -> adjustVariables(operationDefinition, requestDto.getVariables()))
         .flatMap(operationDefinition -> doExecute(operationDefinition,
             requestDto.getVariables()
-        ).map(responseDto -> Map.entry(
-            operationDefinition,
-            responseDto
-        )))
+        ).map(responseDto -> Map.entry(operationDefinition, responseDto)))
         .peek(e -> adjustResult(e.getKey(),
             e
                 .getValue()
                 .getData()
         ))
         .map(Entry::getValue)
-        .reduce(new GraphQLResponseDto<>(), this::merge);
+        .reduce(new GraphQLResponseDto<>(), (dto1,dto2) -> merge(dto1,dto2,true));
   }
 
   private GraphQLResponseDto<ObjectNode> merge(
-      GraphQLResponseDto<ObjectNode> response1, GraphQLResponseDto<ObjectNode> response2
+      GraphQLResponseDto<ObjectNode> response1, GraphQLResponseDto<ObjectNode> response2, boolean throwOnConflict
   ) {
     GraphQLResponseDto<ObjectNode> response = new GraphQLResponseDto<>();
     // merge execution results
     ObjectNode data = response1.getData();
     ObjectNode data2 = response2.getData();
     if (data != null && data2 != null) {
-      response.setData((ObjectNode) merge(data, data2));
+      response.setData((ObjectNode) merge(data, data2,throwOnConflict));
     } else if (data2 != null) {
       response.setData(data2);
     } else {
@@ -75,7 +72,7 @@ public class GraphQLService {
     return response;
   }
 
-  private JsonNode merge(JsonNode node1, JsonNode node2) {
+  private JsonNode merge(JsonNode node1, JsonNode node2, boolean throwOnConflict) {
     if (node1 == null || node1.isNull()) {
       return node2;
     }
@@ -101,18 +98,18 @@ public class GraphQLService {
             .forEachRemaining(e -> {
               JsonNode c1 = node1.get(e.getKey());
               if (node1.get(e.getKey()) != null) {
-                ((ObjectNode) node1).replace(e.getKey(), merge(node1.get(e.getKey()), node2.get(e.getKey())));
+                ((ObjectNode) node1).replace(e.getKey(), merge(node1.get(e.getKey()), node2.get(e.getKey()),throwOnConflict));
               } else {
                 ((ObjectNode) node1).set(e.getKey(), e.getValue());
               }
             });
         return node1;
       } else {
-        //if (node1.equals(node2)) {
-        return node1;
-        //        } else {
-        //          throw new RuntimeException("Nodes cannot be merged, atomic value is not equal: " + node1 + ", " + node2);
-        //        }
+        if (node1.equals(node2) || !throwOnConflict) {
+          return node1;
+        } else {
+          throw new RuntimeException("Nodes cannot be merged, atomic value is not equal: " + node1 + ", " + node2);
+        }
       }
     }
     throw new RuntimeException("Nodes cannot be merged, types are not equal: " + node1 + ", " + node2);
@@ -129,8 +126,12 @@ public class GraphQLService {
                 .newSelectionSet()
                 .selection(operationDefinition.getOperation())
                 .build()
-        ).children(OperationDefinition.CHILD_VARIABLE_DEFINITIONS,
-            operationDefinition.getOperationDefinition().getVariableDefinitions())
+        )
+        .children(OperationDefinition.CHILD_VARIABLE_DEFINITIONS,
+            operationDefinition
+                .getOperationDefinition()
+                .getVariableDefinitions()
+        )
         .build();
     OperationDefinition op = operationDefinition
         .getOperationDefinition()
@@ -160,7 +161,7 @@ public class GraphQLService {
       GraphQLResponseDto<ObjectNode> schema1, GraphQLResponseDto<ObjectNode> schema2
   ) {
 
-    GraphQLResponseDto<ObjectNode> result = merge(schema1, schema2);
+    GraphQLResponseDto<ObjectNode> result = merge(schema1, schema2,false);
 
     // ensure there is only 1 query field -> merge all existing
     // ensure there is only 1 mutation field -> merge all existing
@@ -198,7 +199,7 @@ public class GraphQLService {
             .stream()
             .map(list -> list
                 .stream()
-                .reduce(JsonNodeFactory.instance.objectNode(), this::merge))
+                .reduce(JsonNodeFactory.instance.objectNode(), (json1,json2) -> merge(json1,json2,false)))
             .collect(Collectors.toSet()));
   }
 
@@ -223,15 +224,13 @@ public class GraphQLService {
                 .stream())
             .map(list -> list
                 .stream()
-                .reduce(JsonNodeFactory.instance.objectNode(), this::merge))
+                .reduce(JsonNodeFactory.instance.objectNode(), (json1,json2) -> merge(json1,json2,false)))
             .collect(Collectors.toSet()));
   }
 
   private Function<JsonNode, JsonNode> get(String fieldName) {
     return jsonNode -> jsonNode.get(fieldName);
   }
-
-
 
   private Stream<GraphQLOperationDefinition> extractOperationWithVariableNames(Document document) {
     return document
