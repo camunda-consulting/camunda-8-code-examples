@@ -12,24 +12,31 @@ import org.springframework.stereotype.*;
 import java.util.*;
 import java.util.function.*;
 
+import static java.util.Optional.*;
+
 @Service
 @RequiredArgsConstructor
 public class CustomGraphQLService {
-  private static final Map<Operation, BiPredicate<GraphQL, String>> HANDLE_PREDICATES = Map.of(Operation.QUERY,
-      (gql, operationName) -> gql
+  private static final Map<Operation, BiPredicate<GraphQL, String>> HANDLE_PREDICATES = Map.of(
+      Operation.QUERY,
+      (gql, operationName) -> ofNullable(gql
           .getGraphQLSchema()
-          .getQueryType()
-          .getField(operationName) != null,
+          .getQueryType())
+          .map(type -> type.getField(operationName) != null)
+          .orElse(false),
       Operation.MUTATION,
-      (gql, operationName) -> gql
+      (gql, operationName) -> ofNullable(gql
           .getGraphQLSchema()
-          .getMutationType()
-          .getField(operationName) != null,
+          .getMutationType())
+          .map(type -> type.getField(operationName) != null)
+          .orElse(false),
       Operation.SUBSCRIPTION,
-      (gql, operationName) -> gql
+      (gql, operationName) -> ofNullable(gql
           .getGraphQLSchema()
-          .getSubscriptionType()
-          .getField(operationName) != null
+          .getSubscriptionType())
+          .map(type -> type.getField(operationName) != null)
+          .orElse(false)
+
   );
   private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
   private static final TypeReference<GraphQLResponseDto<ObjectNode>> RESPONSE_TYPE_REFERENCE = new TypeReference<>() {};
@@ -50,8 +57,7 @@ public class CustomGraphQLService {
     return ExecutionInput
         .newExecutionInput()
         .query(requestDto.getQuery())
-        .graphQLContext(objectMapper.convertValue(requestDto.getVariables(),
-            MAP_TYPE_REFERENCE))
+        .graphQLContext(objectMapper.convertValue(requestDto.getVariables(), MAP_TYPE_REFERENCE))
         .variables(objectMapper.convertValue(requestDto.getVariables(), MAP_TYPE_REFERENCE))
         .build();
   }
