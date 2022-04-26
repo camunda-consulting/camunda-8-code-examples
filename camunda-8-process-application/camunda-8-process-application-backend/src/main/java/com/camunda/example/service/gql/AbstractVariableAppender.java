@@ -39,7 +39,7 @@ public abstract class AbstractVariableAppender implements ResponseHandler{
   @Override
   public boolean canHandle(GraphQLOperationDefinition operationDefinition) {
     return operationDefinition
-        .getOperation()
+        .getOperationDefinitionType()
         .equals(Operation.QUERY) && operationDefinition
         .getFields()
         .stream()
