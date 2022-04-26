@@ -6,9 +6,11 @@ const emits = defineEmits(["errorMessage"]);
 
 const variables = computed(() => props.task.variables);
 
-const findVariable = (name: string): any =>
-    JSON.parse(variables.value.find((element: any) => element.name === name).value);
-
+const findVariable = (name: string): any => {
+    console.log("Finding", name);
+    return JSON.parse(variables.value.find((element: any) => element.name === name)!.value);
+};
+console.log("Start finding variables")
 const applicationId = findVariable("applicationId");
 const applicantName = findVariable("applicantName");
 const age = findVariable("age");

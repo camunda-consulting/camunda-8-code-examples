@@ -2,9 +2,9 @@
 import GenericForm from "./GenericForm.vue";
 import { useQuery, useMutation, useResult } from "@vue/apollo-composable";
 import gql from "graphql-tag";
-import { ref, reactive, computed, watchEffect } from "vue";
+import { ref, reactive, computed, watchEffect, type Ref } from "vue";
 import CheckApplication from "./forms/CheckApplication.vue";
-import BpmnViewer from "bpmn-js";
+import BpmnViewer from "./BpmnViewer.vue";
 
 const props = defineProps(["taskId"]);
 defineEmits(["completeTask"]);
@@ -40,12 +40,9 @@ const taskQuery = useQuery(
   { fetchPolicy: "no-cache" }
 );
 
-const form = ref(null);
-const canvas = ref(null);
+const form: Ref<any> = ref(null);
 
 const task = ref(useResult(taskQuery.result));
-
-const bpmnXml = ref();
 
 const formKyMapping = {
   checkApplication: CheckApplication,
@@ -63,36 +60,6 @@ const setError = (msg: any) => {
     message.value = "";
   }
 };
-
-watchEffect(async () => {
-  if (task.value && canvas.value) {
-    if (!bpmnXml.value) {
-      bpmnXml.value = await fetch(
-        `/api/insurance-application/id/${JSON.parse(
-          task.value.variables.find((variable: any) => variable.name === "applicationId")
-            .value
-        )}/xml`
-      ).then((response) => response.text());
-    } else {
-      console.log("Rendering BPMN");
-      const viewer = new BpmnViewer({ container: canvas.value });
-      await viewer.importXML(bpmnXml.value);
-      viewer.get("canvas").zoom("fit-viewport");
-      const bpmnTask = viewer.get("elementRegistry").get(task.value.taskDefinitionId);
-      const overlay = document.createElement("div");
-      overlay.className = "active-bpmn-task";
-      overlay.setAttribute("style", `width: ${bpmnTask.width}px; height: ${bpmnTask.height}px`);
-      viewer.get("overlays").add(task.value.taskDefinitionId, {
-        position: {
-          top: -4,
-          left: -4,
-        },
-        html: overlay,
-      });
-      window.addEventListener("resize", () => viewer.get("canvas").zoom("fit-viewport"));
-    }
-  }
-});
 
 const taskMenu = ["Form", "Diagram", "Raw data"];
 const activeTask = ref("Form");
@@ -124,7 +91,8 @@ const activeTask = ref("Form");
         </div>
       </div>
       <div class="diagram-container" v-if="activeTask === 'Diagram'">
-        <div ref="canvas" class="diagram-viewer"></div>
+        <BpmnViewer :processDefinitionId="task.processDefinitionId" :taskDefinitionId="task.taskDefinitionId"
+          :key="task.id"></BpmnViewer>
       </div>
       <div class="rawdata-container" v-if="activeTask === 'Raw data'">
         <pre>{{ JSON.stringify(task, undefined, 2) }}</pre>
@@ -133,7 +101,7 @@ const activeTask = ref("Form");
   </div>
 </template>
 
-<style>
+<style scoped>
 h3 {
   padding: 10px 0px;
   width: auto;
@@ -200,21 +168,5 @@ textarea {
 
 .diagram-container {
   height: 100%;
-}
-
-.diagram-viewer {
-  border-radius: 30px;
-  width: 100%;
-  height: 100%;
-  background-color: white;
-}
-
-.active-bpmn-task {
-  background-color: var(--primary);
-  border-radius: 10px;
-  border: 4px solid var(--e-global-color-af24b6d);
-  opacity: 0.6;
-  pointer-events: none;
-  padding: 0;
 }
 </style>
