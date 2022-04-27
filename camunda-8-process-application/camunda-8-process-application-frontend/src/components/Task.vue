@@ -2,7 +2,7 @@
 import GenericForm from "./GenericForm.vue";
 import { useQuery, useMutation, useResult } from "@vue/apollo-composable";
 import gql from "graphql-tag";
-import { ref, reactive, computed, watchEffect, type Ref } from "vue";
+import { ref, reactive, computed, watchEffect, type Ref, type DefineComponent } from "vue";
 import CheckApplication from "./forms/CheckApplication.vue";
 import BpmnViewer from "./BpmnViewer.vue";
 
@@ -44,7 +44,7 @@ const form: Ref<any> = ref(null);
 
 const task = ref(useResult(taskQuery.result));
 
-const formKyMapping = {
+const formKeyMapping: { [index: string]: any } = {
   checkApplication: CheckApplication,
 };
 
@@ -77,7 +77,7 @@ const activeTask = ref("Form");
     </div>
     <div class="task-content">
       <div class="form-container" v-if="activeTask === 'Form'">
-        <component :is="formKyMapping[task.formKey] || GenericForm" :task="task" @errorMessage="setError"
+        <component :is="formKeyMapping[task.formKey] || GenericForm" :task="task" @errorMessage="setError"
           :key="'' + task.id + task.formKey" ref="form"></component>
         <div class="button-wrapper">
           <button class="complete" :disabled="faulty"
