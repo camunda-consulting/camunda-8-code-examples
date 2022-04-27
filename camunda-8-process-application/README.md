@@ -15,5 +15,10 @@ the cluster credentials.
 ### Frontend
 Vue3 Application that is built using `npm run build` or run in dev mode with `npm run dev`
 
+## Packaging all toghether
+
+By running `mvn clean package` on the parent, you will get a jar file inside the backend project that contains backend and frontend.
+By providing credentials for the Zeebe Client while giving the API Client the required scopes (Tasklist, Operate, Zeebe), all clients will work with Cloud.
+
 ## Additional information
 
