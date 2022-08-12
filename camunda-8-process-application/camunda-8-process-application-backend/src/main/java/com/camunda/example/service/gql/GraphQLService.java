@@ -1,21 +1,39 @@
 package com.camunda.example.service.gql;
 
-import com.camunda.example.client.tasklist.*;
-import com.camunda.example.client.tasklist.model.*;
-import com.camunda.example.client.tasklist.model.GraphQLResponseDto.*;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.node.*;
-import graphql.language.*;
-import graphql.parser.*;
-import lombok.*;
-import lombok.extern.slf4j.*;
-import org.springframework.stereotype.*;
+import com.camunda.example.client.tasklist.TasklistClient;
+import com.camunda.example.client.tasklist.model.GraphQLOperationDefinition;
+import com.camunda.example.client.tasklist.model.GraphQLOperationField;
+import com.camunda.example.client.tasklist.model.GraphQLRequestDto;
+import com.camunda.example.client.tasklist.model.GraphQLResponseDto;
+import com.camunda.example.client.tasklist.model.GraphQLResponseDto.ErrorDto;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import graphql.language.AstPrinter;
+import graphql.language.Document;
+import graphql.language.Field;
+import graphql.language.FragmentDefinition;
+import graphql.language.NodeChildrenContainer;
+import graphql.language.OperationDefinition;
+import graphql.language.SelectionSet;
+import graphql.language.VariableReference;
+import graphql.parser.Parser;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.util.*;
-import java.util.Map.*;
-import java.util.function.*;
-import java.util.stream.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.util.Optional.*;
 
@@ -29,7 +47,6 @@ public class GraphQLService {
   private final Set<RequestVariableHandler> requestVariableHandlers;
 
   private final CustomGraphQLService customGraphQLService;
-  private final ObjectMapper objectMapper;
 
   public GraphQLResponseDto<ObjectNode> executeQuery(GraphQLRequestDto requestDto) {
     Document query = Parser.parse(requestDto.getQuery());
@@ -96,7 +113,6 @@ public class GraphQLService {
         node2
             .fields()
             .forEachRemaining(e -> {
-              JsonNode c1 = node1.get(e.getKey());
               if (node1.get(e.getKey()) != null) {
                 ((ObjectNode) node1).replace(e.getKey(), merge(node1.get(e.getKey()), node2.get(e.getKey()),throwOnConflict));
               } else {

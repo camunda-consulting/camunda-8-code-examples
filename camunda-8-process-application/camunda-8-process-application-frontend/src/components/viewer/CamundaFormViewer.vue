@@ -4,6 +4,11 @@ import { useQuery, useResult } from "@vue/apollo-composable";
 import { ref, reactive, computed, watchEffect, watch, onMounted } from "vue";
 import gql from "graphql-tag";
 
+type FormEvent = {
+  data: any;
+  errors: any;
+};
+
 const props = defineProps(["variables", "schema"]);
 const emits = defineEmits(["errorMessage"]);
 
@@ -20,12 +25,12 @@ onMounted(async () => {
     container: container.value,
   });
   form.value.importSchema(JSON.parse(schema), data);
-  form.value.on("changed", ({data, errors}) => {
+  form.value.on("changed", ({ data, errors }: FormEvent) => {
     console.log("Data", data);
     console.log("Errors", errors);
     if (Object.keys(errors).length) {
       emits("errorMessage", "Please check the errors in the form");
-    }else{
+    } else {
       emits("errorMessage");
     }
   });

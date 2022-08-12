@@ -35,7 +35,10 @@ const schema = useResult(formQuery.result);
 
 const variables = computed(() => {
   const raw = props.task.variables as Array<Variable>;
-  return raw.reduce((map, obj) => ((map[obj.name] = JSON.parse(obj.value)), map), {});
+  return raw.reduce(
+    (map, obj) => ((map[obj.name] = JSON.parse(obj.value)), map),
+    {} as any
+  );
 });
 
 const emitErrorMessage = (msg: string) => {
@@ -45,14 +48,15 @@ const emitErrorMessage = (msg: string) => {
 
 defineExpose({
   variables: computed(() => {
-    const raw = viewer.value.variables as object;
+    const raw = viewer.value.variables as any;
     console.log("Raw data", raw);
-    const v = Object.entries(raw).map((e: any) => {
-      return {
-        name: e[0],
-        value: JSON.stringify(e[1]),
-      };
-    }) as Array<Variable>;
+
+    const v = [];
+
+    for (const key in raw) {
+      const value = raw[key];
+      v.push({ name: key, value: JSON.stringify(value) });
+    }
     console.log("Variables to submit", v);
     return v;
   }),
