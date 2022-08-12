@@ -13,7 +13,7 @@ import java.util.Map.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-public abstract class AbstractVariableAppender implements ResponseHandler{
+public abstract class AbstractVariableAppender implements ResponseHandler {
   private static final Map<String, Function<Entry<String, String>, String>> STRING_VARIABLE_FIELD_MAPPERS = Map.of("id",
       entry -> "internal-" + entry.getKey(),
       "name",
@@ -30,9 +30,11 @@ public abstract class AbstractVariableAppender implements ResponseHandler{
   );
   private final ObjectMapper objectMapper;
   private final InsuranceApplicationRepository insuranceApplicationRepository;
-  protected AbstractVariableAppender(ObjectMapper objectMapper,
-      InsuranceApplicationRepository insuranceApplicationRepository
-  ) {this.objectMapper = objectMapper;
+
+  protected AbstractVariableAppender(
+      ObjectMapper objectMapper, InsuranceApplicationRepository insuranceApplicationRepository
+  ) {
+    this.objectMapper = objectMapper;
     this.insuranceApplicationRepository = insuranceApplicationRepository;
   }
 
@@ -63,7 +65,15 @@ public abstract class AbstractVariableAppender implements ResponseHandler{
             .stream())
         .map(GraphQLOperationField::getFieldName)
         .collect(Collectors.toSet());
-    ArrayNode variables = (ArrayNode) response.get("variables");
+    if (response instanceof ArrayNode) {
+      response.forEach(element -> appendVariables((ArrayNode) element.get("variables"), fieldNames));
+    } else {
+      ArrayNode variables = (ArrayNode) response.get("variables");
+      appendVariables(variables, fieldNames);
+    }
+  }
+
+  private void appendVariables(ArrayNode variables, Set<String> fieldNames) {
     StreamSupport
         .stream(variables.spliterator(), false)
         .filter(element -> element.has("name"))
@@ -84,16 +94,20 @@ public abstract class AbstractVariableAppender implements ResponseHandler{
 
   @SneakyThrows
   private Set<ObjectNode> createAdditionalVariables(String id, Set<String> fieldNames) {
-    String applicationId = (objectMapper
-        .readTree(id)
-        .asText());
+    String applicationId = (
+        objectMapper
+            .readTree(id)
+            .asText()
+    );
     return insuranceApplicationRepository
         .findById(applicationId)
         .map(entity -> variablesMappers(objectMapper)
             .stream()
             .map(func -> func.apply(entity))
             .map(entry -> Map.entry(entry.getKey(),
-                entry.getValue().toString()
+                entry
+                    .getValue()
+                    .toString()
             ))
             .map(entry -> {
               ObjectNode objectNode = JsonNodeFactory.instance.objectNode();

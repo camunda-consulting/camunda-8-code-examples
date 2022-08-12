@@ -1,7 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0xp7tj2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.0.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.0.0" camunda:diagramRelationId="c1ff5bf4-233c-4c31-a742-4ac7f31c1772">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0xp7tj2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.1.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.0.0" camunda:diagramRelationId="c1ff5bf4-233c-4c31-a742-4ac7f31c1772">
   <bpmn:process id="InsuranceApplication" name="Insurance application" isExecutable="true">
-    <bpmn:extensionElements />
+    <bpmn:extensionElements>
+      <zeebe:userTaskForm id="userTaskForm_0vstge6">{
+  "components": [
+    {
+      "text": "# Inform Manager\n\nA pending application is due for more than 2 days now. Please look into it!",
+      "type": "text",
+      "id": "Field_0t77edf"
+    },
+    {
+      "label": "Application",
+      "type": "textfield",
+      "id": "Field_0jai2y0",
+      "key": "applicationId",
+      "description": "ID of the application",
+      "disabled": true
+    },
+    {
+      "label": "Comment",
+      "type": "textfield",
+      "id": "Field_0cwtk5c",
+      "key": "comment",
+      "description": "Comment about why you were informed",
+      "validate": {
+        "required": true
+      }
+    }
+  ],
+  "type": "default",
+  "id": "Form_0kescq4",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.0.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.1.0"
+  },
+  "schemaVersion": 4
+}</zeebe:userTaskForm>
+    </bpmn:extensionElements>
     <bpmn:startEvent id="StartEvent_0pu71qo" name="New insurance application received">
       <bpmn:extensionElements>
         <zeebe:ioMapping>
@@ -63,7 +100,7 @@
     <bpmn:boundaryEvent id="BoundaryEvent_0vgivfc" name="2 days" cancelActivity="false" attachedToRef="Task_0pl5522">
       <bpmn:outgoing>SequenceFlow_03k1eyk</bpmn:outgoing>
       <bpmn:timerEventDefinition>
-        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/P2D</bpmn:timeCycle>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R1/PT1M</bpmn:timeCycle>
       </bpmn:timerEventDefinition>
     </bpmn:boundaryEvent>
     <bpmn:sequenceFlow id="SequenceFlow_03k1eyk" sourceRef="BoundaryEvent_0vgivfc" targetRef="Task_136l2di" />
@@ -83,8 +120,8 @@
     </bpmn:businessRuleTask>
     <bpmn:userTask id="Task_136l2di" name="Inform manager">
       <bpmn:extensionElements>
-        <zeebe:formDefinition formKey="informManager" />
         <zeebe:assignmentDefinition candidateGroups="manager" />
+        <zeebe:formDefinition formKey="camunda-forms:bpmn:userTaskForm_0vstge6" />
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_03k1eyk</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1kbg2nx</bpmn:outgoing>

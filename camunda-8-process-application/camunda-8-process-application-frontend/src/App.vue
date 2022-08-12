@@ -5,6 +5,16 @@ import { onBeforeUpdate, ref } from "vue";
 import { useQuery, useResult, useMutation } from "@vue/apollo-composable";
 import gql from "graphql-tag";
 
+const currentUserQuery = useQuery(gql`
+  query currentUser {
+    currentUser {
+      displayName
+    }
+  }
+`);
+
+const currentUser = useResult(currentUserQuery.result);
+
 const selectedTask = ref();
 
 const tasksQuery = useQuery(
@@ -35,16 +45,15 @@ const completeTaskMutation = useMutation(gql`
   }
 `);
 
-
-
 const completeTask = completeTaskMutation.mutate;
-
 
 onBeforeUpdate(async () => {
   if (tasklist.value && selectedTask.value) {
     tasksQuery.refetch()?.then(() => {
       if (
-        tasklist.value.findIndex((task: any) => task && selectedTask.value && task.id === selectedTask.value.id) === -1
+        tasklist.value.findIndex(
+          (task: any) => task && selectedTask.value && task.id === selectedTask.value.id
+        ) === -1
       ) {
         selectedTask.value = undefined;
       }
@@ -56,14 +65,25 @@ onBeforeUpdate(async () => {
 <template>
   <div class="header">
     <h1>Insurance Application</h1>
+    <p v-if="currentUser">Welcome {{ currentUser.displayName }}</p>
+    <p v-else></p>
   </div>
   <div class="tasklist">
     <div class="list">
-      <Tasklist @selectedTask="(task) => (selectedTask = task)" :tasklist="tasklist" :selectedTask="selectedTask">
+      <Tasklist
+        @selectedTask="(task) => (selectedTask = task)"
+        :tasklist="tasklist"
+        :selectedTask="selectedTask"
+      >
       </Tasklist>
     </div>
-    <Task v-if="selectedTask && !completeTaskMutation.loading.value" :taskId="selectedTask!.id"
-      @completeTask="completeTask" class="content" :key="selectedTask.id"></Task>
+    <Task
+      v-if="selectedTask && !completeTaskMutation.loading.value"
+      :taskId="selectedTask!.id"
+      @completeTask="completeTask"
+      class="content"
+      :key="selectedTask.id"
+    ></Task>
   </div>
 </template>
 
@@ -78,8 +98,8 @@ body {
   margin: 0px;
   border: 0px;
   padding: 0px;
-  color: white;
-  background-color: black;
+  color: black;
+  background-color: white;
   border-color: var(--e-global-color-af24b6d);
   border-radius: 30px;
 }
@@ -102,6 +122,16 @@ h6 {
 .header {
   text-align: center;
   height: 10%;
+}
+
+.header h1 {
+  height: 70%;
+  padding: 0;
+}
+
+.header p {
+  height: 30%;
+  margin: 0;
 }
 
 .tasklist {
@@ -175,8 +205,8 @@ button {
   cursor: pointer;
   padding: 10px;
   border: 3px solid var(--e-global-color-af24b6d);
-  background-color: black;
-  color: white;
+  background-color: white;
+  color: black;
   border-radius: 30px;
   font-weight: var(--e-global-typography-primary-font-weight);
 }

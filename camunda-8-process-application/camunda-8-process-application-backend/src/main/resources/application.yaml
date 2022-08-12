@@ -9,6 +9,7 @@ logging:
     httpclient:
       wire: debug
     com:
+      okta: debug
       camunda:
         example:
           client:
@@ -22,14 +23,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-  security:
-    user:
-      name: demo
-      password: demo
-      roles: clerk
 resilience4j:
   retry:
     instances:
       operate:
-        max-attempts: 60
+        max-attempts: 15
         wait-duration: 1s

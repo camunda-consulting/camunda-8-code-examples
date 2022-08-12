@@ -10,7 +10,7 @@ type VariableDto = {
 };
 
 const props = defineProps(["task"]);
-const emits = defineEmits(["errorMessage", "variables"]);
+const emits = defineEmits(["errorMessage"]);
 
 
 const variables = ref([] as Array<VariableDto>);

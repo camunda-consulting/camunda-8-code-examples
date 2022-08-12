@@ -16,11 +16,9 @@ export default defineConfig({
     proxy: {
       "/graphql": {
         target: "http://localhost:8080",
-        auth: "demo:demo"
       },
       "/api": {
         target: "http://localhost:8080",
-        auth: "demo:demo"
       },
     },
   },

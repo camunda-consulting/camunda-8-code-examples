@@ -4,7 +4,8 @@ import { useQuery, useMutation, useResult } from "@vue/apollo-composable";
 import gql from "graphql-tag";
 import { ref, reactive, computed, watchEffect, type Ref, type DefineComponent } from "vue";
 import CheckApplication from "./forms/CheckApplication.vue";
-import BpmnViewer from "./BpmnViewer.vue";
+import BpmnViewer from "./BpmnViewerContainer.vue";
+import CamundaForm from "./CamundaFormContainer.vue";
 
 const props = defineProps(["taskId"]);
 defineEmits(["completeTask"]);
@@ -63,25 +64,56 @@ const setError = (msg: any) => {
 
 const taskMenu = ["Form", "Diagram", "Raw data"];
 const activeTask = ref("Form");
+
+const isCamundaForm = (formKey: string):boolean => {
+  return formKey.startsWith('camunda-forms:bpmn:');
+}
 </script>
 
 <template>
   <div v-if="task">
     <h3 class="task-header">{{ task.name }}</h3>
     <div class="task-menu">
-      <button v-for="taskMenuPoint in taskMenu" @click="activeTask = taskMenuPoint" :class="{
-        active: activeTask === taskMenuPoint,
-      }">
+      <button
+        v-for="taskMenuPoint in taskMenu"
+        @click="activeTask = taskMenuPoint"
+        :class="{
+          active: activeTask === taskMenuPoint,
+        }"
+      >
         {{ taskMenuPoint }}
       </button>
     </div>
     <div class="task-content">
       <div class="form-container" v-if="activeTask === 'Form'">
-        <component :is="formKeyMapping[task.formKey] || GenericForm" :task="task" @errorMessage="setError"
-          :key="'' + task.id + task.formKey" ref="form"></component>
+        <CamundaForm
+          v-if="isCamundaForm(task.formKey)"
+          :task="task"
+          :key="'' + task.id + task.formKey + '-camundaForm'"
+          @errorMessage="setError"
+          ref="form"
+        ></CamundaForm>
+        <component
+          v-else-if="formKeyMapping[task.formKey]"
+          :is="formKeyMapping[task.formKey]"
+          :task="task"
+          :key="'' + task.id + task.formKey + '-customForm'"
+          @errorMessage="setError"
+          ref="form"
+        ></component>
+        <GenericForm
+          v-else
+          :task="task"
+          :key="'' + task.id + task.formKey + '-genericForm'"
+          @errorMessage="setError"
+          ref="form"
+        ></GenericForm>
         <div class="button-wrapper">
-          <button class="complete" :disabled="faulty"
-            @click="$emit('completeTask', { taskId: task.id, variables: form.variables })">
+          <button
+            class="complete"
+            :disabled="faulty"
+            @click="$emit('completeTask', { taskId: task.id, variables: form.variables })"
+          >
             Complete
           </button>
         </div>
@@ -91,8 +123,11 @@ const activeTask = ref("Form");
         </div>
       </div>
       <div class="diagram-container" v-if="activeTask === 'Diagram'">
-        <BpmnViewer :processDefinitionId="task.processDefinitionId" :taskDefinitionId="task.taskDefinitionId"
-          :key="task.id"></BpmnViewer>
+        <BpmnViewer
+          :processDefinitionId="task.processDefinitionId"
+          :taskDefinitionId="task.taskDefinitionId"
+          :key="task.id"
+        ></BpmnViewer>
       </div>
       <div class="rawdata-container" v-if="activeTask === 'Raw data'">
         <pre>{{ JSON.stringify(task, undefined, 2) }}</pre>
