@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0xp7tj2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.1.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.0.0" camunda:diagramRelationId="c1ff5bf4-233c-4c31-a742-4ac7f31c1772">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0xp7tj2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.2.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.0.0" camunda:diagramRelationId="c1ff5bf4-233c-4c31-a742-4ac7f31c1772">
   <bpmn:process id="InsuranceApplication" name="Insurance application" isExecutable="true">
     <bpmn:extensionElements>
       <zeebe:userTaskForm id="userTaskForm_0vstge6">{
@@ -132,6 +132,7 @@
         <zeebe:assignmentDefinition candidateGroups="clerk" />
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_061rb18</bpmn:incoming>
+      <bpmn:incoming>Flow_01vvjrn</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_15bjssz</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:serviceTask id="Task_0flfjop" name="Issue policy">
@@ -162,6 +163,19 @@
       <bpmn:incoming>SequenceFlow_1t217j8</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0e934zh</bpmn:outgoing>
     </bpmn:sendTask>
+    <bpmn:boundaryEvent id="Event_064nnn0" name="Additional docs required" attachedToRef="Task_0pl5522">
+      <bpmn:outgoing>Flow_0zoiepv</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_0lii5a4" messageRef="Message_2h9lrbe" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_0zoiepv" sourceRef="Event_064nnn0" targetRef="Activity_1gaclo9" />
+    <bpmn:callActivity id="Activity_1gaclo9" name="Document providing process">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="documentProviding" propagateAllChildVariables="false" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0zoiepv</bpmn:incoming>
+      <bpmn:outgoing>Flow_01vvjrn</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_01vvjrn" sourceRef="Activity_1gaclo9" targetRef="Task_0pl5522" />
   </bpmn:process>
   <bpmn:message id="Message_2h9lrbe" name="document">
     <bpmn:extensionElements>
@@ -252,6 +266,19 @@
         <di:waypoint x="211" y="137" />
         <di:waypoint x="253" y="137" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zoiepv_di" bpmnElement="Flow_0zoiepv">
+        <di:waypoint x="618" y="431" />
+        <di:waypoint x="618" y="500" />
+        <di:waypoint x="670" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_01vvjrn_di" bpmnElement="Flow_01vvjrn">
+        <di:waypoint x="770" y="500" />
+        <di:waypoint x="790" y="500" />
+        <di:waypoint x="790" y="590" />
+        <di:waypoint x="490" y="590" />
+        <di:waypoint x="490" y="390" />
+        <di:waypoint x="518" y="390" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="StartEvent_0pu71qo_di" bpmnElement="StartEvent_0pu71qo">
         <dc:Bounds x="175" y="119" width="36" height="36" />
         <bpmndi:BPMNLabel>
@@ -316,10 +343,20 @@
       <bpmndi:BPMNShape id="Activity_0wum39w_di" bpmnElement="Task_0cwsnxl">
         <dc:Bounds x="1051" y="612" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_12axuts_di" bpmnElement="Activity_1gaclo9">
+        <dc:Bounds x="670" y="460" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BoundaryEvent_0kgt892_di" bpmnElement="BoundaryEvent_0vgivfc">
         <dc:Bounds x="579" y="315" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="623" y="334" width="33" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0654qx5_di" bpmnElement="Event_064nnn0">
+        <dc:Bounds x="600" y="395" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="645.5" y="399" width="75" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
