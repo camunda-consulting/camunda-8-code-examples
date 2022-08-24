@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Camunda 8 Size Calculator</title>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <th>Indicator</th>
+            <th>Calculation method</th>
+            <th>Value</th>
+            <th>Comments</th>
+        </tr>
+        <tr>
+            <th>Throughput calculation</th>
+        </tr>
+        <tr>
+            <td>Process Instances per year</td>
+            <td></td>
+            <td><input type="number" id="processInstancesPerYear"> PI</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Projected Process Instances per year</td>
+            <td>* <input type="number" id="growth">%</td>
+            <td><span id="projectedProcessInstancesPerYear"></span> PI</td>
+        </tr>
+        <tr>
+            <td>Average Process Instances per work day</td>
+            <td>/ <input type="number" id="workDays"> work days / year</td>
+            <td><span id="avgProcessInstancesPerWorkDay"></span> PI</td>
+        </tr>
+        <tr>
+            <td>Average Task Instances per work day</td>
+            <td>* <input type="number" id="taskInstancesPerProcessInstance"> TI / PI</td>
+            <td><span id="avgTaskInstancesPerWorkDay"></span> TI</td>
+        </tr>
+        <tr>
+            <td>Average Task instances per work hour</td>
+            <td>/ <input type="number" id="workHoursPerDay"> hours / work day</td>
+            <td><span id="avgTaskInstancesPerWorkHour"></span> TI</td>
+        </tr>
+        <tr>
+            <td>Average Task instances per work minute</td>
+            <td></td>
+            <td><span id="avgTaskInstancesPerWorkMinute"></span> TI</td>
+        </tr>
+        <tr>
+            <td>Average Task instances per work second</td>
+            <td></td>
+            <td><span id="avgTaskInstancesPerWorkSecond"></span> TI</td>
+        </tr>
+        <tr>
+            <td>Peak Task instances per work second</td>
+            <td>* <input type="number" id="peakLoad">%</td>
+            <td><span id="peekTaskInstancesPerWorkSecond"></span> PI</td>
+        </tr>
+        <tr>
+            <td>Peak Task instances per work second with buffer</td>
+            <td>* <input type="number" id="buffer">%</td>
+            <td><span id="bufferedPeekTaskInstancesPerWorkSecond"></span> PI</td>
+        </tr>
+        <tr>
+            <th>Runtime</th>
+        </tr>
+        <tr>
+            <td>Process Cycle Time</td>
+            <td>* <input type="number" id="timeCycle"> days</td>
+            <td><span id="processInstancesWithCycleTime"></span> PI</td>
+            <td>How long is a process instance typically active? Determines the number of active process instances</td>
+        </tr>
+        <tr>
+            <td>Disk space for Zeebe</td>
+            <td>* <input type="number" id="diskSpaceForZeebePerInstance"> kiB</td>
+            <td><span id="diskSpaceForZeebe"></span> GiB</td>
+            <td>(Converted into GiB by / 1024 / 1024)</td>
+        </tr>
+        <tr>
+            <td>Disk space for Tasklist</td>
+            <td>* <input type="number" id="diskSpaceForTasklistPerInstance"> kiB</td>
+            <td><span id="diskSpaceForTasklist"></span> GiB</td>
+        </tr>
+        <tr>
+            <th>Operate</th>
+        </tr>
+        <tr>
+            <td>PI in retention time</td>
+            <td>* <input type="number" id="operateRetentionTime"> days</td>
+            <td><span id="processInstancesInOperateRetentionTime"></span> PI</td>
+        </tr>
+        <tr>
+            <td>Disk space</td>
+            <td>* <input type="number" id="diskSpaceForOperatePerInstance"> kiB</td>
+            <td><span id="diskSpaceForOperate"></span> GiB</td>
+        </tr>
+        <tr>
+            <th>Optimize</th>
+        </tr>
+        <tr>
+            <td>PI in retention time</td>
+            <td>* <input type="number" id="optimizeRetentionTime"> months</td>
+            <td><span id="processInstancesInOptimizeRetentionTime"></span> PI</td>
+        </tr>
+        <tr>
+            <td>Disk space</td>
+            <td>* <input type="number" id="diskSpaceForOptimizePerInstance"> kiB</td>
+            <td><span id="diskSpaceForOptimize"></span> GiB</td>
+        </tr>
+        <tr>
+            <th>Sum</th>
+            <th></th>
+            <th><span id="diskSpaceTotal"></span> GiB</th>
+        </tr>
+    </table>
+    <script>
+        const ref = (value = undefined) => {
+            return {value, __type: "Ref"};
+        };
+        const calc = (formula) => {return {value: undefined, formula, __type: "Calc"}};
+        const round = (nmb) => Math.round(nmb * 100) / 100;
+
+
+
+
+        const fields = {
+            processInstancesPerYear: ref(2500000),
+            growth: ref(200),
+            projectedProcessInstancesPerYear: calc(() => fields.processInstancesPerYear.value * fields.growth.value / 100),
+            workDays: ref(250),
+            avgProcessInstancesPerWorkDay: calc(() => fields.projectedProcessInstancesPerYear.value / fields.workDays.value),
+            taskInstancesPerProcessInstance: ref(10),
+            avgTaskInstancesPerWorkDay: calc(() => fields.avgProcessInstancesPerWorkDay.value * fields.taskInstancesPerProcessInstance.value),
+            workHoursPerDay: ref(16),
+            avgTaskInstancesPerWorkHour: calc(() => fields.avgTaskInstancesPerWorkDay.value / fields.workHoursPerDay.value),
+            avgTaskInstancesPerWorkMinute: calc(() => fields.avgTaskInstancesPerWorkHour.value / 60),
+            avgTaskInstancesPerWorkSecond: calc(() => fields.avgTaskInstancesPerWorkMinute.value / 60),
+            peakLoad: ref(200),
+            peekTaskInstancesPerWorkSecond: calc(() => fields.avgTaskInstancesPerWorkSecond.value * fields.peakLoad.value / 100),
+            buffer: ref(25),
+            bufferedPeekTaskInstancesPerWorkSecond: calc(() => fields.peekTaskInstancesPerWorkSecond.value * (100 + fields.buffer.value) / 100),
+            timeCycle: ref(5),
+            processInstancesWithCycleTime: calc(() => fields.avgProcessInstancesPerWorkDay.value * fields.timeCycle.value),
+            diskSpaceForZeebePerInstance: ref(75),
+            diskSpaceForZeebe: calc(() => round(fields.processInstancesWithCycleTime.value * fields.diskSpaceForZeebePerInstance.value / 1024 / 1024)),
+            diskSpaceForTasklistPerInstance: ref(21),
+            diskSpaceForTasklist: calc(() => round(fields.processInstancesWithCycleTime.value * fields.diskSpaceForTasklistPerInstance.value / 1024 / 1024)),
+            operateRetentionTime: ref(30),
+            processInstancesInOperateRetentionTime: calc(() => fields.avgProcessInstancesPerWorkDay.value * fields.operateRetentionTime.value),
+            diskSpaceForOperatePerInstance: ref(57),
+            diskSpaceForOperate: calc(() => round(fields.processInstancesInOperateRetentionTime.value * fields.diskSpaceForOperatePerInstance.value / 1024 / 1024)),
+            optimizeRetentionTime: ref(6),
+            processInstancesInOptimizeRetentionTime: calc(() => fields.avgProcessInstancesPerWorkDay.value * fields.optimizeRetentionTime.value * 30),
+            diskSpaceForOptimizePerInstance: ref(21),
+            diskSpaceForOptimize: calc(() => round(fields.diskSpaceForOptimizePerInstance.value * fields.processInstancesInOptimizeRetentionTime.value / 1024 / 1024)),
+            diskSpaceTotal: calc(() => round(fields.diskSpaceForZeebe.value + fields.diskSpaceForTasklist.value + fields.diskSpaceForOperate.value + fields.diskSpaceForOptimize.value))
+        };
+
+        const update = async (event) => {
+            const changed = ref(false);
+            while (!changed.value) {
+                console.log("Updating");
+                changed.value = false;
+                Object.entries(fields).forEach(entry => {
+                    const [key, value] = entry;
+                    const container = document.getElementById(key);
+                    const oldValue = value.value;
+                    if (container) {
+                        if (value.__type === "Calc") {
+                            value.value = round(value.formula());
+                            container.innerHTML = value.value;
+                        }
+                        if (value.__type === "Ref") {
+                            if (container.value) {
+                                value.value = container.value;
+                            } else {
+                                container.value = value.value;
+                            }
+                        }
+                    }
+                    const newValue = value.value;
+                    if (newValue !== oldValue) {
+                        console.log(`Value changed for ${key}: ${oldValue} => ${newValue}`);
+                        changed.value = true;
+                    }
+
+                });
+            }
+        };
+
+        Object.entries(fields).forEach(entry => {
+            const [key, value] = entry;
+            const container = document.getElementById(key);
+            if (container && container.localName === "input") {
+                container.addEventListener("input", update);
+            }
+        });
+        update();
+    </script>
+</body>
+
+</html>

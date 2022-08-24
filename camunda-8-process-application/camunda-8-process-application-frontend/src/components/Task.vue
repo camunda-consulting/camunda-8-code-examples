@@ -66,7 +66,7 @@ const taskMenu = ["Form", "Diagram", "Raw data"];
 const activeTask = ref("Form");
 
 const isCamundaForm = (formKey: string):boolean => {
-  return formKey.startsWith('camunda-forms:bpmn:');
+  return formKey != null && formKey.startsWith('camunda-forms:bpmn:');
 }
 </script>
 

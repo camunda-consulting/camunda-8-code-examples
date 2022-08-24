@@ -8,6 +8,7 @@ import gql from "graphql-tag";
 const currentUserQuery = useQuery(gql`
   query currentUser {
     currentUser {
+      userId
       displayName
     }
   }
