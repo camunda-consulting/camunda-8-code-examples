@@ -1,17 +1,24 @@
 package com.camunda.example.service.gql;
 
-import com.camunda.example.client.tasklist.model.*;
-import com.camunda.example.repository.*;
-import com.camunda.example.repository.model.*;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.node.*;
-import graphql.language.OperationDefinition.*;
-import lombok.*;
+import com.camunda.example.client.tasklist.model.GraphQLOperationDefinition;
+import com.camunda.example.client.tasklist.model.GraphQLOperationField;
+import com.camunda.example.repository.InsuranceApplicationRepository;
+import com.camunda.example.repository.model.InsuranceApplicationEntity;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import graphql.language.OperationDefinition.Operation;
+import lombok.SneakyThrows;
 
-import java.util.*;
-import java.util.Map.*;
-import java.util.function.*;
-import java.util.stream.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public abstract class AbstractVariableAppender implements ResponseHandler {
   private static final Map<String, Function<Entry<String, String>, String>> STRING_VARIABLE_FIELD_MAPPERS = Map.of("id",
@@ -51,7 +58,11 @@ public abstract class AbstractVariableAppender implements ResponseHandler {
   }
 
   @Override
-  public void handleResponse(GraphQLOperationDefinition operationDefinition, JsonNode response) {
+  public void handleResponse(
+      GraphQLOperationDefinition operationDefinition,
+      JsonNode response,
+      ObjectNode requestVariables
+  ) {
     Set<String> fieldNames = operationDefinition
         .getFields()
         .stream()

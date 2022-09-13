@@ -1,18 +1,19 @@
 <script lang="ts" setup>
 import GenericForm from "./GenericForm.vue";
-import { useQuery, useMutation, useResult } from "@vue/apollo-composable";
+import { useQuery, useResult } from "@vue/apollo-composable";
 import gql from "graphql-tag";
-import { ref, reactive, computed, watchEffect, type Ref, type DefineComponent } from "vue";
-import CheckApplication from "./forms/CheckApplication.vue";
+import { ref, reactive, computed, type Ref } from "vue";
 import BpmnViewer from "./BpmnViewerContainer.vue";
 import CamundaForm from "./CamundaFormContainer.vue";
+import CustomFormContainer from "./CustomFormContainer.vue";
+import FormIoContainer from "./FormIoContainer.vue";
 
 const props = defineProps(["taskId"]);
 defineEmits(["completeTask"]);
 
 const taskQuery = useQuery(
   gql`
-    query($id: String!) {
+    query ($id: String!) {
       task(id: $id) {
         id
         name
@@ -41,21 +42,17 @@ const taskQuery = useQuery(
   { fetchPolicy: "no-cache" }
 );
 
-const form: Ref<any> = ref(null);
+const form: Ref<unknown> = ref(null);
 
 const task = ref(useResult(taskQuery.result));
-
-const formKeyMapping: { [index: string]: any } = {
-  checkApplication: CheckApplication,
-};
 
 const faulty = ref(false);
 const message = ref("");
 
-const setError = (msg: any) => {
+const setError = (msg: unknown) => {
   if (msg) {
     faulty.value = true;
-    message.value = msg;
+    message.value = msg as string;
   } else {
     faulty.value = false;
     message.value = "";
@@ -65,8 +62,14 @@ const setError = (msg: any) => {
 const taskMenu = ["Form", "Diagram", "Raw data"];
 const activeTask = ref("Form");
 
-const isCamundaForm = (formKey: string):boolean => {
-  return formKey != null && formKey.startsWith('camunda-forms:bpmn:');
+const isCamundaForm = (formKey: string): boolean => {
+  return formKey != null && formKey.startsWith("camunda-forms:bpmn:");
+}
+const isFormIoForm = (formKey: string): boolean => {
+  return formKey != null && formKey.startsWith("form-io:bpmn:");
+}
+const isCustomForm = (formKey: string): boolean => {
+  return formKey != null && formKey != "";
 }
 </script>
 
@@ -76,6 +79,7 @@ const isCamundaForm = (formKey: string):boolean => {
     <div class="task-menu">
       <button
         v-for="taskMenuPoint in taskMenu"
+        v-bind:key="taskMenuPoint"
         @click="activeTask = taskMenuPoint"
         :class="{
           active: activeTask === taskMenuPoint,
@@ -93,14 +97,20 @@ const isCamundaForm = (formKey: string):boolean => {
           @errorMessage="setError"
           ref="form"
         ></CamundaForm>
-        <component
-          v-else-if="formKeyMapping[task.formKey]"
-          :is="formKeyMapping[task.formKey]"
+        <FormIoContainer
+          v-else-if="isFormIoForm(task.formKey)"
+          :task="task"
+          :key="'' + task.id + task.formKey + '-formIoForm'"
+          @errorMessage="setError"
+          ref="form"
+        ></FormIoContainer>
+        <CustomFormContainer
+          v-else-if="isCustomForm(task.formKey)"
           :task="task"
           :key="'' + task.id + task.formKey + '-customForm'"
           @errorMessage="setError"
           ref="form"
-        ></component>
+        ></CustomFormContainer>
         <GenericForm
           v-else
           :task="task"
@@ -112,7 +122,12 @@ const isCamundaForm = (formKey: string):boolean => {
           <button
             class="complete"
             :disabled="faulty"
-            @click="$emit('completeTask', { taskId: task.id, variables: form.variables })"
+            @click="
+              $emit('completeTask', {
+                taskId: task.id,
+                variables: form.variables,
+              })
+            "
           >
             Complete
           </button>

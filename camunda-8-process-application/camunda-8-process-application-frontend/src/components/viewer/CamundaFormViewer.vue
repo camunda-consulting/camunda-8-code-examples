@@ -1,8 +1,6 @@
 <script lang="ts" setup>
-import { Form, formFields } from "@bpmn-io/form-js-viewer";
-import { useQuery, useResult } from "@vue/apollo-composable";
-import { ref, reactive, computed, watchEffect, watch, onMounted } from "vue";
-import gql from "graphql-tag";
+import { Form } from "@bpmn-io/form-js-viewer";
+import { ref, computed, onMounted } from "vue";
 
 type FormEvent = {
   data: any;
@@ -14,7 +12,7 @@ const emits = defineEmits(["errorMessage"]);
 
 const container = ref(null);
 
-const form = ref(null as any);
+const form = ref(null as unknown);
 
 onMounted(async () => {
   const schema = props.schema;

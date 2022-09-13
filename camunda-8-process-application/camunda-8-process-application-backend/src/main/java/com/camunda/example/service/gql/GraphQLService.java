@@ -54,14 +54,18 @@ public class GraphQLService {
         .peek(operationDefinition -> adjustVariables(operationDefinition, requestDto.getVariables()))
         .flatMap(operationDefinition -> doExecute(operationDefinition,
             requestDto.getVariables()
-        ).map(responseDto -> Map.entry(operationDefinition, responseDto)))
+        ).map(responseDto -> Map.entry(
+            operationDefinition,
+            responseDto
+        )))
         .peek(e -> adjustResult(e.getKey(),
             e
                 .getValue()
-                .getData()
+                .getData(),
+            requestDto.getVariables()
         ))
         .map(Entry::getValue)
-        .reduce(new GraphQLResponseDto<>(), (dto1,dto2) -> merge(dto1,dto2,true));
+        .reduce(new GraphQLResponseDto<>(), (dto1, dto2) -> merge(dto1, dto2, true));
   }
 
   private GraphQLResponseDto<ObjectNode> merge(
@@ -72,7 +76,7 @@ public class GraphQLService {
     ObjectNode data = response1.getData();
     ObjectNode data2 = response2.getData();
     if (data != null && data2 != null) {
-      response.setData((ObjectNode) merge(data, data2,throwOnConflict));
+      response.setData((ObjectNode) merge(data, data2, throwOnConflict));
     } else if (data2 != null) {
       response.setData(data2);
     } else {
@@ -114,7 +118,9 @@ public class GraphQLService {
             .fields()
             .forEachRemaining(e -> {
               if (node1.get(e.getKey()) != null) {
-                ((ObjectNode) node1).replace(e.getKey(), merge(node1.get(e.getKey()), node2.get(e.getKey()),throwOnConflict));
+                ((ObjectNode) node1).replace(e.getKey(),
+                    merge(node1.get(e.getKey()), node2.get(e.getKey()), throwOnConflict)
+                );
               } else {
                 ((ObjectNode) node1).set(e.getKey(), e.getValue());
               }
@@ -177,7 +183,7 @@ public class GraphQLService {
       GraphQLResponseDto<ObjectNode> schema1, GraphQLResponseDto<ObjectNode> schema2
   ) {
 
-    GraphQLResponseDto<ObjectNode> result = merge(schema1, schema2,false);
+    GraphQLResponseDto<ObjectNode> result = merge(schema1, schema2, false);
 
     // ensure there is only 1 query field -> merge all existing
     // ensure there is only 1 mutation field -> merge all existing
@@ -215,7 +221,7 @@ public class GraphQLService {
             .stream()
             .map(list -> list
                 .stream()
-                .reduce(JsonNodeFactory.instance.objectNode(), (json1,json2) -> merge(json1,json2,false)))
+                .reduce(JsonNodeFactory.instance.objectNode(), (json1, json2) -> merge(json1, json2, false)))
             .collect(Collectors.toSet()));
   }
 
@@ -240,7 +246,7 @@ public class GraphQLService {
                 .stream())
             .map(list -> list
                 .stream()
-                .reduce(JsonNodeFactory.instance.objectNode(), (json1,json2) -> merge(json1,json2,false)))
+                .reduce(JsonNodeFactory.instance.objectNode(), (json1, json2) -> merge(json1, json2, false)))
             .collect(Collectors.toSet()));
   }
 
@@ -315,18 +321,28 @@ public class GraphQLService {
   }
 
   private void adjustResult(
-      GraphQLOperationDefinition operation, ObjectNode responseData
+      GraphQLOperationDefinition operation, ObjectNode responseData, ObjectNode requestVariables
   ) {
     if (responseData == null) {
       return;
     }
+    prepareResponseData(responseData, operation.getOperationName());
     responseHandlers
         .stream()
         .filter(operationHandler -> null != responseData.get(operation.getOperationName()))
         .filter(operationHandler -> operationHandler.canHandle(operation))
         .forEach(operationHandler -> operationHandler.handleResponse(operation,
-            responseData.get(operation.getOperationName())
+            responseData.get(operation.getOperationName()),
+            requestVariables
         ));
+  }
+
+  private void prepareResponseData(ObjectNode responseData, String operationName) {
+    if (responseData
+        .get(operationName)
+        .isNull()) {
+      responseData.replace(operationName, JsonNodeFactory.instance.objectNode());
+    }
   }
 
 }

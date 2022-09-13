@@ -1,9 +1,14 @@
 schema {
     query: Query
+    mutation: Mutation
 }
 
 type Query {
     bpmnXml(processDefinitionId: ID!): BpmnXml
+}
+
+type Mutation {
+    publishMessage(messageName: String!,correlationKey: String!, variables: [VariableInput!]!): PublishMessageResponse
 }
 """
 BpmnXml is a wrapper that contains the BPMN XML as data field
@@ -11,4 +16,13 @@ BpmnXml is a wrapper that contains the BPMN XML as data field
 type BpmnXml {
     id: ID!
     data: String!
+}
+
+input VariableInput {
+    name: String!
+    value: String!
+}
+
+type PublishMessageResponse {
+    key: ID!
 }

@@ -29,7 +29,7 @@ public class CurrentUserHandler implements ResponseHandler {
   }
 
   @Override
-  public void handleResponse(GraphQLOperationDefinition operationDefinition, JsonNode response) {
+  public void handleResponse(GraphQLOperationDefinition operationDefinition, JsonNode response, ObjectNode requestVariables) {
     Optional
         .ofNullable(SecurityContextHolder.getContext())
         .map(SecurityContext::getAuthentication)

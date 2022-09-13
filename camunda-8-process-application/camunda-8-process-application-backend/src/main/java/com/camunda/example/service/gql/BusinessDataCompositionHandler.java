@@ -1,18 +1,16 @@
 package com.camunda.example.service.gql;
 
-import com.camunda.example.client.tasklist.model.*;
-import com.camunda.example.repository.*;
-import com.camunda.example.repository.model.*;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.node.*;
-import lombok.*;
-import lombok.extern.slf4j.*;
-import org.springframework.stereotype.*;
+import com.camunda.example.repository.InsuranceApplicationRepository;
+import com.camunda.example.repository.model.InsuranceApplicationEntity;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.Map.*;
-import java.util.function.*;
-import java.util.stream.*;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.function.Function;
 
 @Component
 @Slf4j
@@ -29,6 +27,5 @@ public class BusinessDataCompositionHandler extends AbstractVariableAppender {
         objectMapper.valueToTree(entity.getApplicantName())
     ));
   }
-
 
 }
