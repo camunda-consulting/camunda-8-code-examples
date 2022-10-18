@@ -1,8 +1,10 @@
 package org.example;
 
+import io.camunda.zeebe.client.api.response.ActivatedJob;
+import io.camunda.zeebe.client.api.worker.JobClient;
 import io.camunda.zeebe.spring.client.EnableZeebeClient;
-import io.camunda.zeebe.spring.client.annotation.ZeebeDeployment;
-import io.camunda.zeebe.spring.client.annotation.ZeebeWorker;
+import io.camunda.zeebe.spring.client.annotation.Deployment;
+import io.camunda.zeebe.spring.client.annotation.JobWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -16,7 +18,7 @@ import java.util.stream.IntStream;
 
 @SpringBootApplication
 @EnableZeebeClient
-@ZeebeDeployment(resources = "classpath*:**.bpmn")
+@Deployment(resources = "classpath*:**.bpmn")
 public class Main {
   private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
@@ -24,7 +26,7 @@ public class Main {
     SpringApplication.run(Main.class, args);
   }
 
-  @ZeebeWorker(
+  @JobWorker(
       type = "generateUuids",
       autoComplete = true,
       fetchVariables = {"uuid"})
@@ -32,14 +34,23 @@ public class Main {
     return createUuids("uuids");
   }
 
-  @ZeebeWorker(type = "generateInnerUuids", autoComplete = true, fetchVariables = {"uuid"})
+  @JobWorker(
+      type = "generateInnerUuids",
+      fetchVariables = {"uuid"})
   public Map<String, Object> generateInnerUuids() {
     return createUuids("inneruuids");
   }
 
-  @ZeebeWorker(type = "logger",autoComplete = true,fetchVariables = {"inneruuid"})
-  public Map<String, Object> logger(){
-    return Map.of("timestamp", LocalDateTime.now().toString());
+  @JobWorker(
+      type = "logger",
+      fetchVariables = {"inneruuid"},
+      autoComplete = false)
+  public void logger(ActivatedJob job, JobClient client) {
+    LOG.info("logger triggered");
+    client
+        .newCompleteCommand(job)
+        .variables(Map.of("timestamp", LocalDateTime.now().toString()))
+        .send();
   }
 
   private Map<String, Object> createUuids(String variableName) {
