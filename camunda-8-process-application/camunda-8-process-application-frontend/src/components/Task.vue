@@ -42,7 +42,7 @@ const taskQuery = useQuery(
   { fetchPolicy: "no-cache" }
 );
 
-const form: Ref<unknown> = ref(null);
+const form = ref(null as any);
 
 const task = ref(useResult(taskQuery.result));
 

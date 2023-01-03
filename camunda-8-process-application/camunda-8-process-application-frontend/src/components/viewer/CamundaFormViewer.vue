@@ -12,7 +12,7 @@ const emits = defineEmits(["errorMessage"]);
 
 const container = ref(null);
 
-const form = ref(null as unknown);
+const form = ref(null as any);
 
 onMounted(async () => {
   const schema = props.schema;

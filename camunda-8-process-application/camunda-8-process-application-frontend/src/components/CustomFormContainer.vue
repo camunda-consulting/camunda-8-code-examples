@@ -1,11 +1,12 @@
 <script lang="ts" setup>
+import type { Ref } from "preact";
 import { ref, computed } from "vue";
 import CheckApplication from "./forms/CheckApplication.vue";
 
 const props = defineProps(["task"]);
 const emits = defineEmits(["errorMessage"]);
 
-const form = ref(null);
+const form = ref(null as any);
 
 const formKeyMapping: { [index: string]: any } = {
   checkApplication: CheckApplication,
