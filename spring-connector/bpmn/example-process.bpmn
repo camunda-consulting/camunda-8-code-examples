@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0d0gd4i" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.16.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.3.0">
-  <bpmn:process id="Process_1yjivn2" isExecutable="true">
-    <bpmn:sequenceFlow id="Flow_0znzi23" sourceRef="StartEvent_1" targetRef="Activity_1oo0465" />
-    <bpmn:endEvent id="Event_057bnq1" name="Example connector call done">
+  <bpmn:process id="ExampleConnectorDemoProcess" name="Example Connector Demo" isExecutable="true">
+    <bpmn:sequenceFlow id="Flow_0znzi23" sourceRef="ExampleConnectorCallRequiredStartEvent" targetRef="CallExampleConnectorTask" />
+    <bpmn:endEvent id="ExampleConnectorCallDoneEndEvent" name="Example connector call done">
       <bpmn:incoming>Flow_1ups00p</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1ups00p" sourceRef="Activity_1oo0465" targetRef="Event_057bnq1" />
-    <bpmn:startEvent id="StartEvent_1" name="Example connector call required">
+    <bpmn:sequenceFlow id="Flow_1ups00p" sourceRef="CallExampleConnectorTask" targetRef="ExampleConnectorCallDoneEndEvent" />
+    <bpmn:startEvent id="ExampleConnectorCallRequiredStartEvent" name="Example connector call required">
       <bpmn:outgoing>Flow_0znzi23</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:serviceTask id="Activity_1oo0465" name="Call example connector">
+    <bpmn:serviceTask id="CallExampleConnectorTask" name="Call example connector">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="com.camunda.consulting:example" />
       </bpmn:extensionElements>
@@ -18,20 +18,20 @@
     </bpmn:serviceTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1yjivn2">
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ExampleConnectorDemoProcess">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="ExampleConnectorCallRequiredStartEvent">
         <dc:Bounds x="179" y="99" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="163" y="142" width="68" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_057bnq1_di" bpmnElement="Event_057bnq1">
+      <bpmndi:BPMNShape id="Event_057bnq1_di" bpmnElement="ExampleConnectorCallDoneEndEvent">
         <dc:Bounds x="432" y="99" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="416" y="142" width="68" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_060pymq_di" bpmnElement="Activity_1oo0465">
+      <bpmndi:BPMNShape id="Activity_060pymq_di" bpmnElement="CallExampleConnectorTask">
         <dc:Bounds x="270" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_0znzi23_di" bpmnElement="Flow_0znzi23">
