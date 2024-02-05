@@ -1,3 +1,5 @@
+>Deprecation note: The relevant example of this repository have been moved [here](https://github.com/camunda-community-hub/camunda-8-examples)
+
 # camunda-8-code-examples
 
 This is your place for code snippets that rely on Camunda Platform 8 and Zeebe.
